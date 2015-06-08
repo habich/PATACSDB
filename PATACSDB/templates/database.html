@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block body %}
+<table data-toggle="table"
+    data-url="/database.json"
+     data-sort-name="proteins"
+        data-sort-order="desc"
+    data-search="true" 
+    data-show-toggle="true"
+    data-show-columns="true">
+    <thead>
+    <tr>
+        <th data-field="organism_name" data-formatter="speciesFormatter">Species name</th>
+    </tr>
+    </thead>
+    </table>
+        <script>
+    function speciesFormatter(organism_name,row) {
+        return '<a href="' + row.organism_link + '">' + organism_name + '</a>'
+    }
+//     function sequenceFormatter(value, row) {
+//         return value + "<br/>" + row.nucleotide_seq
+//     }
+    </script>
+    
+{% endblock %}
