@@ -2,14 +2,17 @@
 {% block body %}
 <table data-toggle="table"
     data-url="/database.json"
-     data-sort-name="proteins"
-        data-sort-order="desc"
+    data-sort-name="organism_name"
+    data-sort-order="asc"
     data-search="true" 
     data-show-toggle="true"
     data-show-columns="true">
     <thead>
     <tr>
-        <th data-field="organism_name" data-formatter="speciesFormatter">Species name</th>
+        <th data-field="organism_name" data-formatter="speciesFormatter" data-sortable="true">Species name</th>
+        <th data-field="protein_number" data-sortable="true"> Number of proteins </th>
+        <th data-field="transcript_number" data-sortable="true"> Number of transcripts </th>
+        <th data-field="transcript_with_polya" data-sortable="true"> Number of transcripts with polyA sequence </th> 
     </tr>
     </thead>
     </table>
