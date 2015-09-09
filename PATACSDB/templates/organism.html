@@ -22,29 +22,25 @@
     </thead>
     </table>
     <script>
-//     function linkFormatter(value) {
-//         return '<a href="' + value + '">Link</a>'
-//     }
-//     http://central.biomart.org/martsearch/#!/?q=ENSP00000369497
-//     function proteinFormatter(protein_name,row) {
-//         return '<a href="' + row.protein_link + '">' + protein_name + '</a>'
-//     }
     function geneFormatter(gene_id,row) {
-        return '<a href="' + row.gene_link + '">' + gene_id + '</a>'
+        if (row.gene_link) {
+            return '<a href="' + row.gene_link + '">' + gene_id + '</a>'
+        } else {
+            return gene_id
+        }
     }
     function transcriptFormatter(transcript_id,row) {
         return '<a href="' + row.transcript_link + '">' + transcript_id + '</a>'
     }
-    function seqFromatter(sequence_info, row){
-        return  sequence_info.sequence.slice(0,sequence_info.AAA_start)+"<b>"+'<a href="'+ sequence_info.sequence_link+ '">'+sequence_info.sequence.slice(sequence_info.AAA_start,sequence_info.AAA_stop)+ '</a>'+"</b>" + sequence_info.sequence.slice(sequence_info.AAA_stop)
+    function seqFromatter(sequence_info, row) {
+        return sequence_info.sequence.slice(0,sequence_info.AAA_start)+"<b>"+'<a href="'+ sequence_info.sequence_link+ '">'+sequence_info.sequence.slice(sequence_info.AAA_start,sequence_info.AAA_stop)+ '</a>'+"</b>" + sequence_info.sequence.slice(sequence_info.AAA_stop)
     }
-    function sequenceSorter(a,b){
+    function sequenceSorter(a,b) {
         a_len = a.AAA_stop-a.AAA_start
-        b_len = b.AAA_stop-a.AAA_start
+        b_len = b.AAA_stop-b.AAA_start
         if (a_len > b_len) return 1
         if (a_len < b_len) return -1
         return 0;
     }
-
     </script>
 {% endblock %}

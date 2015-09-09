@@ -11,12 +11,15 @@ class Species(db.Model):
     database =  Column(String(20),nullable = False)
     species_name = Column(String(150),nullable = False)
     transcript = relationship('Cdna', backref='species')
+    biomart_database = Column(String(150),nullable=True)
 
 class PolyA(db.Model):
     id = Column(Integer, primary_key = True) 
     transcript_id = Column(String(30), ForeignKey('cdna.transcript_id'), nullable=False)
     AAA_start = Column(Integer, nullable = False)
     AAA_stop = Column(Integer, nullable = False)
+    AAA_global_start = Column(Integer, nullable = False)
+    AAA_global_stop = Column(Integer, nullable = False)
 
 class GO(db.Model):
     id = Column(Integer, primary_key = True)

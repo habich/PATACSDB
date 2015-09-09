@@ -12,23 +12,24 @@ import math
 the_logest_AAA = None
 margin = 7
 
-
 def ensembl_link(database):
     if database:
         return "http://"+database+".ensembl.org/"
     else:
         return "http://www.ensembl.org/"
-    
 
 def gene_link(cdna,species):
-    return ensembl_link(species.database) + cdna.organism_name+"/Gene/Summary?db=core;g="+cdna.gene_id
+    if species.biomart_database:
+        return "http://central.biomart.org/martreport/?report=report&mart=gene_ensembl_report&link_ensembl_gene_id="+cdna.gene_id+"&datasets="+species.biomart_database
+    else:
+        return None
 
 def transcript_link(cdna,species):
     return ensembl_link(species.database) + cdna.organism_name+"/Transcript/Summary?db=core;g="+cdna.gene_id+";t="+cdna.transcript_id
 
-def sequence_link(cdna,gtf,species):
+def sequence_link(cdna,gtf,species,polyA):
     return ensembl_link(species.database) +cdna.organism_name+"/Location/View?db=core;g="+cdna.gene_id+";r="+gtf.chromosome_name+":"+\
-        str(gtf.chromosome_location_start)+"-"+str(gtf.chromosome_location_stop)+";t="+cdna.transcript_id
+        str(polyA.AAA_global_start)+"-"+str(polyA.AAA_global_stop)+";t="+cdna.transcript_id
 
 def location(cdna,polyA):
     return str("{0:.2f}".format((float(polyA.AAA_start)*100)/len(cdna.nucleotide_sequence)))
@@ -47,7 +48,7 @@ def make_sequence(cdna,polyA):
     start_character = "[START]"
     stop_charaterer = "[STOP]"
     start_margin = (the_logest_AAA+margin)*"-"+start_character
-    stop_margin = stop_charaterer+(the_logest_AAA+margin)*"-"               
+    stop_margin = stop_charaterer+(the_logest_AAA+margin)*"-"
     AAA_len = polyA.AAA_stop-polyA.AAA_start
     left_len = int(math.floor(float(the_logest_AAA+2*margin-AAA_len)/2))
     right_len = int(math.ceil(float(the_logest_AAA+2*margin-AAA_len)/2))
@@ -61,7 +62,7 @@ def make_sequence(cdna,polyA):
     else:
         sequence+= cdna.nucleotide_sequence[polyA.AAA_stop:polyA.AAA_stop+right_len]
     return (sequence,left_len,left_len+AAA_len)
-    
+
 def make_dict(cdna,gtf,pep,polyA,species):
     sequence_info = make_sequence(cdna,polyA)
     return {
@@ -74,10 +75,9 @@ def make_dict(cdna,gtf,pep,polyA,species):
         "sequence_info" : { "sequence": sequence_info[0],
                            "AAA_start":sequence_info[1],
                            "AAA_stop":sequence_info[2],
-                           "sequence_link" : sequence_link(cdna,gtf,species)} 
+                           "sequence_link" : sequence_link(cdna,gtf,species,polyA)}
      }
 
- 
 @app.route("/")
 def index():
     return render_template("index.html",genomes=db.session.query(schema.Species).count(), genes=db.session.query(schema.Cdna).distinct(schema.Cdna.gene_id).count(), polya=db.session.query(schema.PolyA).count())
@@ -98,13 +98,12 @@ def show_organism(organism_id):
     database = []
     for cdna,gtf,pep,polyA,species in db.session.query(schema.Cdna, schema.Gtf , schema.Pep, schema.PolyA, schema.Species ).join(schema.PolyA).join(schema.Pep).join(schema.Gtf).join(schema.Species).filter(schema.Cdna.organism_name==organism_id):
         database.append(make_dict(cdna,gtf,pep,polyA,species))
-            
     return json.dumps(database)
-    
-@app.route("/database")    
+
+@app.route("/database")
 @app.route("/database/<organism>")
 def database(organism=None):
     if organism:
         return render_template("organism.html",organism_url=url_for("show_organism",organism_id=organism))
     else:
-        return render_template("database.html", )
+        return render_template("database.html")

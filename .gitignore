@@ -1,6 +1,11 @@
 #PATACSDB internal
 data/
 PATACSDB/AA.db
+*.data
+*_failed
+
+#Temporary
+*~
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
