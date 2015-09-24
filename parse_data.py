@@ -82,16 +82,16 @@ def organisms_files_dictionary(raw_data_directory):
     for directory,_,files in os.walk(raw_data_directory):
         for f in files:
             name = f.split(".")
-            if "abinito" in name:
+            if "abinitio" in name:
                 continue
             organism = f.split("/")[-1].split(".")[0]
             if organism:
                 if name[-3] == "pep":
-                    org_dict[organism]["pep"]+= directory+"/"+f
+                    org_dict[organism]["pep"]= directory+"/"+f
                 elif name[-3] == "cdna":
-                    org_dict[organism]["cdna"]+= directory+"/"+f
+                    org_dict[organism]["cdna"]= directory+"/"+f
                 elif name[-1] == "gtf":
-                    org_dict[organism]["gtf"]+= directory+"/"+f
+                    org_dict[organism]["gtf"]= directory+"/"+f
                 database_looking = directory.split("/")
                 if "metazoa" in database_looking:
                     org_dict[organism]["database"]="metazoa"
@@ -389,7 +389,9 @@ def main():
     for organism,paths in org_dict.items():
         print "Organism: ", organism
         load_species(biomart_database,paths,organism)
-        
+
+	print "Paths: ", paths
+	        
         print "GTF reading in progress"
         exon_info = load_gtf(ensembl_names,paths,organism)
 
