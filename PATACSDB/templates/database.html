@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
 <table data-toggle="table"
-    data-url="/database.json"
+    data-url="{{ url_for('database_json') }}"
     data-sort-name="organism_name"
     data-sort-order="asc"
     data-search="true" 

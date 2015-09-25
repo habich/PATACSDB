@@ -8,8 +8,7 @@
 
     <!-- Bootstrap -->
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-
-    <link rel="stylesheet" href="/static/css/bootstrap-table.css">
+    <link href="{{ url_for('static', filename='css/bootstrap-table.css') }}" rel="stylesheet">
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -21,16 +20,16 @@
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="/static/js/bootstrap.min.js"></script>
-    <script src="/static/js/bootstrap-table.js"></script>
-    <script src="/static/js/bootstrap-table-en-US.js"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap-table.js') }} "></script>
+    <script src="{{ url_for('static', filename='js/bootstrap-table-en-US.js') }} "></script>
 
     <div class="container">
           <div class="header">
         <nav>
           <ul class="nav nav-pills pull-right">
-            <li role="presentation"><a href="/">Home</a></li>
-            <li role="presentation" ><a href="/database">Database</a></li>
+            <li role="presentation"><a href="{{ url_for('index') }}">Home</a></li>
+            <li role="presentation" ><a href="{{ url_for('database') }}">Database</a></li>
             <li role="presentation"><a href="#">Contact</a></li>
           </ul>
         </nav>
@@ -50,12 +49,6 @@
         <p>Data available under CC0 license. If you use this resource please cite: Habich, Djuranovic & Szczesny, 2015</p>
       </footer>
     </div> <!-- /container -->
-
-
-    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-    <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
-
-
 
 
 
