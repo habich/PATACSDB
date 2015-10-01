@@ -15,16 +15,11 @@ class Species(db.Model):
 
 class PolyA(db.Model):
     id = Column(Integer, primary_key = True) 
-    transcript_id = Column(String(30), ForeignKey('cdna.transcript_id'), nullable=False)
+    transcript_id = Column(String(30), ForeignKey('cdna.transcript_id'), nullable=False, index=True)
     AAA_start = Column(Integer, nullable = False)
     AAA_stop = Column(Integer, nullable = False)
     AAA_global_start = Column(Integer, nullable = False)
     AAA_global_stop = Column(Integer, nullable = False)
-
-class GO(db.Model):
-    id = Column(Integer, primary_key = True)
-    transcript_id = Column(Integer, ForeignKey('cdna.transcript_id'))
-    GO_id = Column(String(30),nullable = False )
     
 class Cdna(db.Model):
     transcript_id = Column(String(30),nullable=False, primary_key = True)
@@ -33,13 +28,12 @@ class Cdna(db.Model):
     protein = relationship('Pep', backref='cdna')    
     cdna_start = Column(Integer,nullable = False)
     cdna_stop = Column(Integer, nullable = False)
-    organism_name = Column(String(100), ForeignKey('species.id'))    
-    GOs = relationship('GO')
+    organism_name = Column(String(100), ForeignKey('species.id'), index=True)
     polyA = relationship('PolyA', backref='cdna')
 
 class Pep(db.Model):
     protein_id = Column(String(30), nullable = False, primary_key = True)
-    transcript_id = Column(String(30), ForeignKey('cdna.transcript_id'), nullable=False)
+    transcript_id = Column(String(30), ForeignKey('cdna.transcript_id'), nullable=False, index=True)
     protein_sequence = Column(Text, nullable = False)
 
 class Gtf(db.Model):

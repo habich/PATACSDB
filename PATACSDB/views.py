@@ -9,7 +9,9 @@ from sqlalchemy import func
 from sqlalchemy import distinct
 import math
 
-the_logest_AAA = None
+genomes = None
+list_of_organisms = None
+the_logest_AAA = {}
 margin = 7
 
 def ensembl_link(database):
@@ -40,18 +42,18 @@ def protein_name(gtf,pep):
     else:
         return pep.protein_id
 
-def make_sequence(cdna,polyA):
+def make_sequence(cdna,polyA,species):
     global the_logest_AAA
-    if the_logest_AAA is None:
-        the_logest_AAA = db.session.query(func.max(schema.PolyA.AAA_stop-schema.PolyA.AAA_start)).all()[0][0]
+    if species not in the_logest_AAA:
+        the_logest_AAA[species] = db.session.query(func.max(schema.PolyA.AAA_stop-schema.PolyA.AAA_start)).join(schema.Cdna).filter(schema.Cdna.organism_name == species).all()[0][0]
     sequence = ""
     start_character = "[START]"
     stop_charaterer = "[STOP]"
-    start_margin = (the_logest_AAA+margin)*"-"+start_character
-    stop_margin = stop_charaterer+(the_logest_AAA+margin)*"-"
+    start_margin = (the_logest_AAA[species]+margin)*"-"+start_character
+    stop_margin = stop_charaterer+(the_logest_AAA[species]+margin)*"-"
     AAA_len = polyA.AAA_stop-polyA.AAA_start
-    left_len = int(math.floor(float(the_logest_AAA+2*margin-AAA_len)/2))
-    right_len = int(math.ceil(float(the_logest_AAA+2*margin-AAA_len)/2))
+    left_len = int(math.floor(float(the_logest_AAA[species]+2*margin-AAA_len)/2))
+    right_len = int(math.ceil(float(the_logest_AAA[species]+2*margin-AAA_len)/2))
     if polyA.AAA_start - left_len < 0:
         sequence+= start_margin[polyA.AAA_start - left_len:]+cdna.nucleotide_sequence[:polyA.AAA_start]
     else:
@@ -64,7 +66,7 @@ def make_sequence(cdna,polyA):
     return (sequence,left_len,left_len+AAA_len)
 
 def make_dict(cdna,gtf,pep,polyA,species):
-    sequence_info = make_sequence(cdna,polyA)
+    sequence_info = make_sequence(cdna,polyA,species.id)
     return {
         "protein_name" : protein_name(gtf,pep),
         "gene_id" : cdna.gene_id,
@@ -80,11 +82,17 @@ def make_dict(cdna,gtf,pep,polyA,species):
 
 @app.route("/")
 def index():
-    return render_template("index.html",genomes=db.session.query(schema.Species).count(), genes=db.session.query(schema.Cdna).distinct(schema.Cdna.gene_id).count(), polya=db.session.query(schema.PolyA).count())
+    global genomes
+    if not genomes:
+        genomes=(db.session.query(schema.Species).count(), db.session.query(schema.Cdna).distinct(schema.Cdna.gene_id).count(), db.session.query(schema.PolyA).count())
+    genome,genes,polya = genomes
+    return render_template("index.html", genomes = genome, genes = genes, polya = polya)
 
 @app.route("/database.json")
 def database_json():
-    list_of_organisms = [{"organism_name":x.species_name,
+    global list_of_organisms
+    if not list_of_organisms:
+        list_of_organisms = [{"organism_name":x.species_name,
                           "organism_link":url_for('database',organism=x.id),
                           "protein_number":protein_number,
                           "transcript_number":transcript_number,

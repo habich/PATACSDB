@@ -182,15 +182,17 @@ def get_protein_names(organism,dic):
             return  dict([(x.split("\t")[0],x.split("\t")[1]) for x in g.split("\n") if x])
     return {}
 
-def load_pep_dict(paths,organism):
+def load_pep_dict(paths,organism,exon_info,failed):
     pep = SeqIO.parse(open(paths["pep"],'r'),"fasta")
     pep_dict = defaultdict(list)
     for q in pep:
         description = dict([z.split(":",1) for z in q.description.split()[1:] if ":" in z ])
         transcript = description["transcript"]
         gene = description["gene"]
+        if transcript not in exon_info:
+            failed.write(",".join([q.id,transcript ,"---",str(q.seq),"---"])+"\n")
+            continue
         pep_dict[(gene,transcript)].append(q)
-        
         protein = schema.Pep(protein_id = q.id, transcript_id = transcript, protein_sequence = str(q.seq))
         db.session.add(protein)
     return pep_dict
@@ -205,9 +207,8 @@ def load_species(biomart_database, paths,organism):
     species = schema.Species(id = organism,database=paths["database"], species_name = species_name, biomart_database=biomart)
     db.session.add(species)
 
-def load_cdna_and_polyA(paths,organism,pep_dict,exon_info):
+def load_cdna_and_polyA(paths,organism,pep_dict,exon_info,failed):
     organism_out = open(organism+"_polyA.data",'w')
-    failed = open(organism+"_failed",'w')
     cdna = list(SeqIO.parse(open(paths["cdna"],'r'),"fasta"))
     cdna_size = len(cdna)
     cdna_counter = 0
@@ -222,7 +223,6 @@ def load_cdna_and_polyA(paths,organism,pep_dict,exon_info):
         cdna_gene = description["gene"]
         
         gt = (cdna_gene,cdna_transcript_id)
-        
         if gt in pep_dict:
             
             for p in pep_dict[gt]:
@@ -377,7 +377,8 @@ def main():
     if len(sys.argv) != 2:
         print "Usage: "+sys.argv[0]+" <directory with ensembl data>"
         exit(1)
-    
+    if "Failed" not in os.listdir("./"):
+        os.mkdir("./Failed")
     raw_data_directory = sys.argv[1]
     db.drop_all()
     db.create_all()
@@ -388,20 +389,19 @@ def main():
     
     for organism,paths in org_dict.items():
         print "Organism: ", organism
+        failed = open("./Failed/"+organism+"_failed",'w')
         load_species(biomart_database,paths,organism)
 
-	print "Paths: ", paths
-	        
         print "GTF reading in progress"
         exon_info = load_gtf(ensembl_names,paths,organism)
 
         print "Protein reading in progress"
-        pep_dict = load_pep_dict(paths,organism)
+        pep_dict = load_pep_dict(paths,organism,exon_info,failed)
         
         print "Making database in progress"
-        load_cdna_and_polyA(paths,organism,pep_dict,exon_info)
+        load_cdna_and_polyA(paths,organism,pep_dict,exon_info,failed)
                     
         db.session.commit()
-
+        failed.close()
 if __name__ == "__main__":
     main()
