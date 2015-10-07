@@ -2,6 +2,7 @@
 import glob
 import sys
 import os
+import os.path
 import time
 import logging
 from collections import defaultdict
@@ -389,17 +390,18 @@ def main():
     
     for organism,paths in org_dict.items():
         print "Organism: ", organism
-        failed = open("./Failed/"+organism+"_failed",'w')
-        load_species(biomart_database,paths,organism)
+	if os.path.isfile(paths["gtf"]):  
+	        failed = open("./Failed/"+organism+"_failed",'w')
+	        load_species(biomart_database,paths,organism)
 
-        print "GTF reading in progress"
-        exon_info = load_gtf(ensembl_names,paths,organism)
+	        print "GTF reading in progress"
+	        exon_info = load_gtf(ensembl_names,paths,organism)
 
-        print "Protein reading in progress"
-        pep_dict = load_pep_dict(paths,organism,exon_info,failed)
+	        print "Protein reading in progress"
+	        pep_dict = load_pep_dict(paths,organism,exon_info,failed)
         
-        print "Making database in progress"
-        load_cdna_and_polyA(paths,organism,pep_dict,exon_info,failed)
+	        print "Making database in progress"
+	        load_cdna_and_polyA(paths,organism,pep_dict,exon_info,failed)
                     
         db.session.commit()
         failed.close()
