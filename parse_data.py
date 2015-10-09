@@ -21,12 +21,12 @@ import requests
 import urllib2
 import xmltodict
 import subprocess
+from sqlalchemy import func
 
 #ensembl_request = "http://rest.ensemblgenomes.org/lookup/id/"
 ensembl_request = "http://rest.ensembl.org/lookup/id/"
 biomart_database = "http://central.biomart.org/martservice/datasets?config=gene_ensembl_report"
 AAA_id = 0
-GO_id = 0
 logger = logging.getLogger(__name__)
 FAST_NAMES= True
 
@@ -381,16 +381,22 @@ def main():
     if "Failed" not in os.listdir("./"):
         os.mkdir("./Failed")
     raw_data_directory = sys.argv[1]
-    db.drop_all()
     db.create_all()
-    
+    made_organisms_list = [x[0] for x in db.session.query(schema.Species.id)]
+    global AAA_id
+    AAA_id = db.session.query(func.max(schema.PolyA.id))[0][0]
+    if not AAA_id:
+        AAA_id = 0
     org_dict = organisms_files_dictionary(raw_data_directory)
     biomart_database = get_biomart_database()
     ensembl_names = get_ensembl_databases()
     
     for organism,paths in org_dict.items():
         print "Organism: ", organism
-	if os.path.isfile(paths["gtf"]):  
+        if organism in made_organisms_list:
+            print "Made"
+            continue
+        if os.path.isfile(paths["gtf"]):
 	        failed = open("./Failed/"+organism+"_failed",'w')
 	        load_species(biomart_database,paths,organism)
 
