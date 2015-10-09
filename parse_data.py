@@ -398,8 +398,9 @@ def main():
         if organism in made_organisms_list:
             print "Made"
             continue
+	failed = open("./Failed/"+organism+"_failed",'w')
         if os.path.isfile(paths["gtf"]):
-	        failed = open("./Failed/"+organism+"_failed",'w')
+		print "Species information in progress"
 	        load_species(biomart_database,paths,organism)
 
 	        print "GTF reading in progress"
@@ -411,7 +412,9 @@ def main():
 	        print "Making database in progress"
 	        load_cdna_and_polyA(paths,organism,pep_dict,exon_info,failed)
                     
-        db.session.commit()
+	        db.session.commit()
+	else:
+		failed.write("ERROR: NO GTF FILE\n")
         failed.close()
 if __name__ == "__main__":
     main()
