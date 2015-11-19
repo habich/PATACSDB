@@ -43,3 +43,16 @@ class Gtf(db.Model):
     chromosome_location_stop = Column(Integer, nullable = True)
     strand = Column(String(50),nullable = True)
     protein_name = Column(String(150),nullable = True)
+    
+class MainMetadata(db.Model):
+    id = Column(Integer, primary_key = True)
+    genome = Column(Integer,nullable = False)
+    genes = Column(Integer, nullable = False)
+    polyA = Column(Integer, nullable = False)
+    
+class OrganismMetadata(db.Model):
+    organism_id = Column(String(100), ForeignKey('species.id'), nullable = False, primary_key = True)
+    organism_name = Column(String(100), ForeignKey('species.species_name'), nullable = False)
+    protein_number = Column(Integer, nullable = False)
+    transcript_number = Column(Integer, nullable = False)
+    trans_pol = Column(Integer, nullable = False)

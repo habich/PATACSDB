@@ -22,6 +22,7 @@ import urllib2
 import xmltodict
 import subprocess
 from sqlalchemy import func
+from sqlalchemy import distinct
 
 #ensembl_request = "http://rest.ensemblgenomes.org/lookup/id/"
 ensembl_request = "http://rest.ensembl.org/lookup/id/"
@@ -39,7 +40,10 @@ def configure_logging(level = logging.INFO):
 # Finds available organisms in Biomart database 
 def get_biomart_database():
     biomart_dict = {}
-    response = urllib2.urlopen(biomart_database)
+    try:
+        response = urllib2.urlopen(biomart_database)
+    except:
+        return biomart_dict
     xml = response.read()
     obj = xmltodict.parse(xml)
     for dataset in obj['datasets']['dataset']:
@@ -267,7 +271,6 @@ def load_cdna_and_polyA(paths,organism,pep_dict,exon_info,failed):
                     y.close()
                     best = []
                     for i in range(3):
-                        w = cdna_sequence
                         cdna_seq = SeqRecord(Seq(cdna_sequence[i:len(cdna_sequence)-((len(cdna_sequence)-i)%3)]).translate(stop_symbol="W"),id="cdna_seq")
                         k = open(organism+"cdna.fasta",'w')
                         SeqIO.write(cdna_seq, k , "fasta")
@@ -277,7 +280,7 @@ def load_cdna_and_polyA(paths,organism,pep_dict,exon_info,failed):
                         for bl_res in blast_result_records:
                             for z in bl_res.alignments:
                                 for h in z.hsps:
-                                    best.append((h.query,h.sbjct,i,h.sbjct_start,h.score))
+                                    best.append((h.query,h.sbjct,i,h.sbjct_start, h.query_start,h.score))
                     if best:
                         l = sorted(best,key=lambda x:x[-1])[-1]
                         proper_seq = cdna_sequence[l[2]+(int(l[3])-1)*3:l[2]+((int(l[3])-1)+len(l[1]))*3]
@@ -287,6 +290,9 @@ def load_cdna_and_polyA(paths,organism,pep_dict,exon_info,failed):
                         grab_AAA_information(AAA_list,organism_out, cdna_transcript_id,cdna_start,proper_seq,exon_info[cdna_transcript_id])
                     else:
                         failed.write(",".join([protein_id,cdna_transcript_id,gene_id,pep_sequence,cdna_sequence])+"\n")
+                    
+                    
+                    
                     os.remove(organism+"cdna.fasta")
                     os.remove(organism+"prot.fasta")
         
@@ -400,7 +406,7 @@ def main():
             continue
 	failed = open("./Failed/"+organism+"_failed",'w')
         if os.path.isfile(paths["gtf"]):
-		print "Species information in progress"
+                print "Species information in progress"
 	        load_species(biomart_database,paths,organism)
 
 	        print "GTF reading in progress"
@@ -411,10 +417,28 @@ def main():
         
 	        print "Making database in progress"
 	        load_cdna_and_polyA(paths,organism,pep_dict,exon_info,failed)
-                    
+                
 	        db.session.commit()
+	        
 	else:
 		failed.write("ERROR: NO GTF FILE\n")
         failed.close()
+        
+        
+        
+        
+    genome = db.session.query(schema.Species).count()
+    genes = db.session.query(schema.Cdna).distinct(schema.Cdna.gene_id).count()
+    polyA = db.session.query(schema.PolyA).count()
+    metadata = schema.MainMetadata(genome = genome, genes = genes, polyA = polyA)
+    db.session.add(metadata)
+    
+    for x,protein_number,transcript_number, trans_pol in db.session.query(schema.Species,func.count(distinct(schema.Cdna.gene_id)),
+                                                                                    func.count(distinct(schema.Cdna.transcript_id)),
+                                                                                    func.count(distinct(schema.PolyA.transcript_id))).join(schema.Cdna).outerjoin(schema.PolyA).group_by(schema.Cdna.organism_name).all():
+        organismMetadata = schema.OrganismMetadata(organism_id = x.id, organism_name = x.species_name, protein_number = protein_number, transcript_number = transcript_number, trans_pol = trans_pol)
+        db.session.add(organismMetadata)
+    db.session.commit()
+        
 if __name__ == "__main__":
     main()

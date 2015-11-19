@@ -8,7 +8,6 @@ from schema import db
 from sqlalchemy import func
 from sqlalchemy import distinct
 import math
-
 genomes = None
 list_of_organisms = None
 the_logest_AAA = {}
@@ -82,23 +81,16 @@ def make_dict(cdna,gtf,pep,polyA,species):
 
 @app.route("/")
 def index():
-    global genomes
-    if not genomes:
-        genomes=(db.session.query(schema.Species).count(), db.session.query(schema.Cdna).distinct(schema.Cdna.gene_id).count(), db.session.query(schema.PolyA).count())
-    genome,genes,polya = genomes
-    return render_template("index.html", genomes = genome, genes = genes, polya = polya)
+    mainMetadata = db.session.query(schema.MainMetadata).first()
+    return render_template("index.html", genomes = mainMetadata.genome, genes = mainMetadata.genes, polya = mainMetadata.polyA)
 
 @app.route("/database.json")
 def database_json():
-    global list_of_organisms
-    if not list_of_organisms:
-        list_of_organisms = [{"organism_name":x.species_name,
-                          "organism_link":url_for('database',organism=x.id),
-                          "protein_number":protein_number,
-                          "transcript_number":transcript_number,
-                          "transcript_with_polya":trans_pol } for x,protein_number,transcript_number, trans_pol in db.session.query(schema.Species,func.count(distinct(schema.Cdna.gene_id)),
-                                                                                        func.count(distinct(schema.Cdna.transcript_id)),
-                                                                                        func.count(distinct(schema.PolyA.transcript_id))).join(schema.Cdna).outerjoin(schema.PolyA).group_by(schema.Cdna.organism_name).all()]
+    list_of_organisms = [{"organism_name":organismMetadata.organism_name,
+                    "organism_link":url_for('database',organism=organismMetadata.organism_id),
+                    "protein_number":organismMetadata.protein_number,
+                    "transcript_number":organismMetadata.transcript_number,
+                    "transcript_with_polya":organismMetadata.trans_pol } for organismMetadata in db.session.query(schema.OrganismMetadata)]
     return json.dumps(list_of_organisms)
 
 @app.route("/<organism_id>.json")
