@@ -213,7 +213,7 @@ def load_species(biomart_database, paths,organism):
     db.session.add(species)
 
 def load_cdna_and_polyA(paths,organism,pep_dict,exon_info,failed):
-    organism_out = open("./Data/organism"+"_polyA.data",'w')
+    organism_out = open("./Data/"+organism+"_polyA.data",'w')
     cdna = list(SeqIO.parse(open(paths["cdna"],'r'),"fasta"))
     cdna_size = len(cdna)
     cdna_counter = 0
