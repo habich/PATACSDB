@@ -1,7 +1,17 @@
 {% extends "layout.html" %}
 {% block body %}
 
-    <table
+<!--export data -->
+        <div id="toolbar">
+            <select class="form-control">
+                <option value="">Export Basic</option>
+                <option value="all">Export All</option>
+                <option value="selected">Export Selected</option>
+            </select>
+        </div>
+
+
+    <table id="table"
     style="font-family:Courier New"
     data-toggle="table"
     data-url="{{organism_url}}"
@@ -10,6 +20,8 @@
     data-search="true"
     data-sort-name="protein_name"
     data-sort-order="asc"
+    data-show-export="true"
+    data-toolbar="#toolbar"
     >
     <thead>
     <tr>
@@ -22,7 +34,16 @@
     </thead>
     </table>
     <script>
-    function geneFormatter(gene_id,row) {
+    var $table = $('#table');
+    $(function () {
+        $('#toolbar').find('select').change(function () {
+            $table.bootstrapTable('refreshOptions', {
+                exportDataType: $(this).val()
+            });
+        });
+    })
+
+   function geneFormatter(gene_id,row) {
         if (row.gene_link) {
             return '<a href="' + row.gene_link + '">' + gene_id + '</a>'
         } else {
@@ -42,5 +63,6 @@
         if (a_len < b_len) return -1
         return 0;
     }
+
     </script>
 {% endblock %}
